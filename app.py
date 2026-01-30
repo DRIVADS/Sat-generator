@@ -39,11 +39,13 @@ def generar():
             rfc=rfc
         )
 
+        salida_pdf = convertir_a_pdf_pdfco(salida_docx)
+
         return send_file(
-            salida,
+            salida_pdf,
             as_attachment=True,
-            download_name=nombre_archivo,  # 👈 RFC EN DESCARGA
-            mimetype="application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+            download_name=f"{rfc}.pdf",
+            mimetype="application/pdf"
         )
 
     except Exception as e:
@@ -61,4 +63,5 @@ def generar():
 # ===================== MAIN =====================
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000)
+
 
