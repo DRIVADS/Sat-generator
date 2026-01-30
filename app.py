@@ -1,5 +1,6 @@
 from flask import Flask, request, send_file, jsonify
 from generador import generar_constancia
+from pdfco import convertir_a_pdf_pdfco   # 👈 IMPORT NUEVO
 import uuid
 import os
 
@@ -63,5 +64,6 @@ def generar():
 # ===================== MAIN =====================
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000)
+
 
 
