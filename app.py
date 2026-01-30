@@ -40,7 +40,7 @@ def generar():
             rfc=rfc
         )
 
-        salida_pdf = convertir_a_pdf_pdfco(salida_docx)
+        salida_pdf = convertir_a_pdf_pdfco(salida)
 
         return send_file(
             salida_pdf,
@@ -64,6 +64,7 @@ def generar():
 # ===================== MAIN =====================
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000)
+
 
 
 
