@@ -28,7 +28,7 @@ def generar():
     rfc = rfc.strip().upper()
 
     # Render solo permite escritura en /tmp
-    nombre_archivo = f"{uuid.uuid4()}.docx"
+    nombre_archivo = f"{rfc}.docx"  # 👈 RFC COMO NOMBRE
     salida = f"/tmp/{nombre_archivo}"
 
     try:
@@ -42,7 +42,7 @@ def generar():
         return send_file(
             salida,
             as_attachment=True,
-            download_name="constancia_sat.docx",
+            download_name=nombre_archivo,  # 👈 RFC EN DESCARGA
             mimetype="application/vnd.openxmlformats-officedocument.wordprocessingml.document"
         )
 
@@ -61,3 +61,4 @@ def generar():
 # ===================== MAIN =====================
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000)
+
