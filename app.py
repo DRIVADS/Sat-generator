@@ -1,9 +1,11 @@
 from flask import Flask, request, send_file, jsonify
 from generador import generar_constancia
-import uuid
 import os
 
 app = Flask(__name__)
+
+CODIGO_SECRETO = "LILIYROSY"  # 👈 CÓDIGO REQUERIDO
+
 
 # ===================== RUTA PRINCIPAL =====================
 @app.route("/", methods=["GET"])
@@ -19,16 +21,24 @@ def home():
 def generar():
     id_cif = request.form.get("id_cif")
     rfc = request.form.get("rfc")
+    codigo = request.form.get("codigo")  # 👈 NUEVO CAMPO
 
-    if not id_cif or not rfc:
+    # Validar campos obligatorios
+    if not id_cif or not rfc or not codigo:
         return jsonify({
-            "error": "El id_cif y el rfc son obligatorios"
+            "error": "El id_cif, rfc y código son obligatorios"
         }), 400
+
+    # Validar código secreto
+    if codigo != CODIGO_SECRETO:
+        return jsonify({
+            "error": "Código inválido"
+        }), 403
 
     rfc = rfc.strip().upper()
 
     # Render solo permite escritura en /tmp
-    nombre_archivo = f"{rfc}.docx"  # 👈 RFC COMO NOMBRE
+    nombre_archivo = f"{rfc}.docx"
     salida = f"/tmp/{nombre_archivo}"
 
     try:
@@ -42,7 +52,7 @@ def generar():
         return send_file(
             salida,
             as_attachment=True,
-            download_name=nombre_archivo,  # 👈 RFC EN DESCARGA
+            download_name=nombre_archivo,
             mimetype="application/vnd.openxmlformats-officedocument.wordprocessingml.document"
         )
 
@@ -53,7 +63,6 @@ def generar():
         }), 500
 
     finally:
-        # Limpieza opcional (Render borra /tmp solo)
         if os.path.exists(salida):
             pass
 
@@ -61,3 +70,4 @@ def generar():
 # ===================== MAIN =====================
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000)
+
