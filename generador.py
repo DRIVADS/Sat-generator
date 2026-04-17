@@ -17,6 +17,16 @@ from requests.adapters import HTTPAdapter
 from docx import Document
 from docx.shared import Inches
 
+# ✅ NUEVO IMPORT
+from zoneinfo import ZoneInfo
+
+
+# ===================== TIMEZONE =====================
+TZ_MX = ZoneInfo("America/Mexico_City")
+
+def ahora_mx():
+    return datetime.datetime.now(TZ_MX)
+
 
 # ===================== SSL ADAPTER SAT =====================
 class TLSAdapter(HTTPAdapter):
@@ -57,7 +67,9 @@ def generar_codigo_barras_rfc(rfc):
 
 
 def generar_cadena(rfc):
-    fecha_hora = datetime.datetime.now().strftime("%Y/%m/%d %H:%M:%S")
+    # ✅ CORREGIDO
+    fecha_hora = ahora_mx().strftime("%Y/%m/%d %H:%M:%S")
+
     numero_largo = ''.join(random.choices(string.digits, k=21))
     base64_fake = ''.join(
         random.choices(string.ascii_letters + string.digits + '+/=', k=90)
@@ -148,7 +160,9 @@ def generar_constancia(
         "ENERO","FEBRERO","MARZO","ABRIL","MAYO","JUNIO",
         "JULIO","AGOSTO","SEPTIEMBRE","OCTUBRE","NOVIEMBRE","DICIEMBRE"
     ]
-    hoy = datetime.date.today()
+
+    # ✅ CORREGIDO
+    hoy = ahora_mx().date()
     fecha_formateada = f"{hoy.day} DE {meses[hoy.month-1]} DE {hoy.year}"
 
     key1 = generar_cadena(rfc)
