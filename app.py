@@ -1,10 +1,14 @@
 from flask import Flask, request, send_file, jsonify
+from flask_cors import CORS
 from generador import generar_constancia
 import psycopg2
 import os
 from datetime import datetime
 
 app = Flask(__name__)
+
+# ✅ HABILITAR CORS (permite peticiones desde tu HTML)
+CORS(app)
 
 CODIGO_SECRETO = "LILIYROSY"
 
@@ -92,6 +96,8 @@ def crear_socio():
         return jsonify({"mensaje": "Socio creado correctamente"})
 
     except Exception as e:
+        if 'conn' in locals():
+            conn.rollback()
         return jsonify({"error": str(e)}), 500
 
 
@@ -154,6 +160,8 @@ def crear_recarga():
         return jsonify({"mensaje": "Recarga aplicada y saldo actualizado 💰"})
 
     except Exception as e:
+        if 'conn' in locals():
+            conn.rollback()
         return jsonify({"error": str(e)}), 500
 
 
@@ -186,10 +194,11 @@ def crear_registro():
         return jsonify({"mensaje": "Registro guardado 📄"})
 
     except Exception as e:
+        if 'conn' in locals():
+            conn.rollback()
         return jsonify({"error": str(e)}), 500
 
 
 # ===================== MAIN =====================
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000)
-
