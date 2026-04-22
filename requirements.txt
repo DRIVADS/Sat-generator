@@ -8,3 +8,5 @@ python-barcode
 Pillow
 urllib3
 psycopg2-binary
+flask-cors
+psycopg2-binary
