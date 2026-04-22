@@ -7,3 +7,4 @@ python-docx
 python-barcode
 Pillow
 urllib3
+psycopg2-binary
