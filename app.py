@@ -1,10 +1,16 @@
 from flask import Flask, request, send_file, jsonify
 from generador import generar_constancia
+import psycopg2
 import os
+from datetime import datetime
 
 app = Flask(__name__)
 
-CODIGO_SECRETO = "LILIYROSY"  # 👈 CÓDIGO REQUERIDO
+CODIGO_SECRETO = "LILIYROSY"
+
+# ===================== CONEXIÓN A BD =====================
+def get_conn():
+    return psycopg2.connect(os.getenv("DATABASE_URL"))
 
 
 # ===================== RUTA PRINCIPAL =====================
@@ -12,7 +18,7 @@ CODIGO_SECRETO = "LILIYROSY"  # 👈 CÓDIGO REQUERIDO
 def home():
     return jsonify({
         "status": "ok",
-        "mensaje": "API Generador de Constancia SAT activa"
+        "mensaje": "API activa con base de datos 🚀"
     })
 
 
@@ -21,23 +27,19 @@ def home():
 def generar():
     id_cif = request.form.get("id_cif")
     rfc = request.form.get("rfc")
-    codigo = request.form.get("codigo")  # 👈 NUEVO CAMPO
+    codigo = request.form.get("codigo")
 
-    # Validar campos obligatorios
     if not id_cif or not rfc or not codigo:
         return jsonify({
             "error": "El id_cif, rfc y código son obligatorios"
         }), 400
 
-    # Validar código secreto
     if codigo != CODIGO_SECRETO:
         return jsonify({
             "error": "Código inválido"
         }), 403
 
     rfc = rfc.strip().upper()
-
-    # Render solo permite escritura en /tmp
     nombre_archivo = f"{rfc}.docx"
     salida = f"/tmp/{nombre_archivo}"
 
@@ -62,9 +64,129 @@ def generar():
             "detalle": str(e)
         }), 500
 
-    finally:
-        if os.path.exists(salida):
-            pass
+
+# ===================== CREAR SOCIO =====================
+@app.route("/api/socios", methods=["POST"])
+def crear_socio():
+    data = request.json
+
+    try:
+        conn = get_conn()
+        cursor = conn.cursor()
+
+        cursor.execute("""
+            INSERT INTO socios (clave, usuario, nombre, apellido_pa, saldo)
+            VALUES (%s, %s, %s, %s, %s)
+        """, (
+            data["clave"],
+            data["usuario"],
+            data["nombre"],
+            data["apellido_pa"],
+            data["saldo"]
+        ))
+
+        conn.commit()
+        cursor.close()
+        conn.close()
+
+        return jsonify({"mensaje": "Socio creado correctamente"})
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+# ===================== LISTAR SOCIOS =====================
+@app.route("/api/socios", methods=["GET"])
+def listar_socios():
+    try:
+        conn = get_conn()
+        cursor = conn.cursor()
+
+        cursor.execute("SELECT * FROM socios")
+        datos = cursor.fetchall()
+
+        cursor.close()
+        conn.close()
+
+        return jsonify(datos)
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+# ===================== RECARGA =====================
+@app.route("/api/recargas", methods=["POST"])
+def crear_recarga():
+    data = request.json
+
+    try:
+        conn = get_conn()
+        cursor = conn.cursor()
+
+        fecha = datetime.now().date()
+        hora = datetime.now().time()
+
+        # Insertar recarga
+        cursor.execute("""
+            INSERT INTO recargas (clave_socio, recarga, fecha, hora)
+            VALUES (%s, %s, %s, %s)
+        """, (
+            data["clave_socio"],
+            data["recarga"],
+            fecha,
+            hora
+        ))
+
+        # Actualizar saldo automáticamente
+        cursor.execute("""
+            UPDATE socios
+            SET saldo = saldo + %s
+            WHERE clave = %s
+        """, (
+            data["recarga"],
+            data["clave_socio"]
+        ))
+
+        conn.commit()
+        cursor.close()
+        conn.close()
+
+        return jsonify({"mensaje": "Recarga aplicada y saldo actualizado 💰"})
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+# ===================== REGISTRO =====================
+@app.route("/api/registros", methods=["POST"])
+def crear_registro():
+    data = request.json
+
+    try:
+        conn = get_conn()
+        cursor = conn.cursor()
+
+        fecha = datetime.now().date()
+        hora = datetime.now().time()
+
+        cursor.execute("""
+            INSERT INTO registros (clave_socio, rfc, fecha, hora)
+            VALUES (%s, %s, %s, %s)
+        """, (
+            data["clave_socio"],
+            data["rfc"],
+            fecha,
+            hora
+        ))
+
+        conn.commit()
+        cursor.close()
+        conn.close()
+
+        return jsonify({"mensaje": "Registro guardado 📄"})
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 
 # ===================== MAIN =====================
